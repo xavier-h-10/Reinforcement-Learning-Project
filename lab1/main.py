@@ -7,7 +7,7 @@ from PolicyIteration import policy_iteration
 
 # Grid Map Definition
 env_for_value_iter = GridworldEnv([6, 6])
-env_for_policy_iter = GridworldEnv([6, 6])
+env_for_policy_iter = GridworldEnv([4, 4])
 
 
 def value_iteration_policy(env):
