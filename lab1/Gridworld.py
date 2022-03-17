@@ -1,135 +1,73 @@
-# Gridworld.py
-
 import numpy as np
-import sys
-from gym.envs.toy_text import discrete
-from io import StringIO
-
-# Action definition
-UP = 0
-RIGHT = 1
-DOWN = 2
-LEFT = 3
-
-# Terminal State
-terminal_state_1 = 1
-terminal_state_2 = 35
+import matplotlib.pyplot as plt
 
 
-# Gridworld class
-class GridworldEnv(discrete.DiscreteEnv):
-    metadata = {'render.modes': ['human', 'ansi']}
+class GridWorld:
+    def __init__(self, shape, terminal):
+        self.n = shape[0]
+        self.m = shape[1]
+        self.value = np.zeros([self.n, self.m])
+        self.action = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+        self.terminal = terminal
+        self.reward = -1
+        self.prob = 0.25
+        self.discount_factor = 1.0
+        self.policy = np.zeros_like(self.value)
 
-    def __init__(self, shape=None):
-        # # Initialization for father class
-        # super().__init__(nS, nA, P, isd)
-        if not isinstance(shape, (list, tuple)) or not len(shape) == 2:
-            raise ValueError('Shape argument must be a list/tuple of length 2')
-        # Declaration
-        self.shape = shape
-
-        # Size
-        MAX_Y = shape[0]
-        MAX_X = shape[1]
-        # Total number of grids
-        nS = MAX_X * MAX_Y
-        # Total number of actions (up, right, down and left)
-        nA = 4
-
-        # P
-        P = {}
-        # Grid container
-        grid = np.arange(nS).reshape(shape)
-        # Iterator, to visit the grid matrix, 'multi_index' means itr could move to any directions in each iteration
-        itr = np.nditer(grid, flags=['multi_index'])
-
-        # Traverse all grids
-        while not itr.finished:
-            # Number
-            s = itr.iterindex
-            # Position
-            y, x = itr.multi_index
-            # Generate options, the number is nA, which means up/right/down/left, P = {0: {0:[], 1:[], 2:[], 3:[]}, 1: ...}
-            P[s] = {a: [] for a in range(nA)}
-
-            # Whether it is terminal state
-            def is_done(pos): return pos == terminal_state_1 or pos == terminal_state_2
-            # Reward settings
-            reward = 0.0 if is_done(s) else -1.0
-
-            # If have reached terminal state
-            if is_done(s):
-                # [(prob, next_state, reward, done)], prob means transfers probability, all 1.0 in MDP
-                P[s][UP] = [(1.0, s, reward, True)]
-                P[s][RIGHT] = [(1.0, s, reward, True)]
-                P[s][DOWN] = [(1.0, s, reward, True)]
-                P[s][LEFT] = [(1.0, s, reward, True)]
-            # Not a terminal state
+    def calc_value(self, x, y):
+        v = 0
+        for action in self.action:
+            next_pos = np.array([x, y]) + np.array(action)
+            if next_pos[0] < 0 or next_pos[0] >= self.n or next_pos[1] < 0 or next_pos[1] >= self.m:
+                v += (self.reward + self.discount_factor * self.value[x, y]) * self.prob
             else:
-                # Calculate the next possible position
-                next_UP = s if y == 0 else s - MAX_X                # means go up for a gird
-                next_RIGHT = s if x == (MAX_X - 1) else s + 1
-                next_DOWN = s if y == (MAX_Y - 1) else s + MAX_X
-                next_LEFT = s if x == 0 else s - 1
-                P[s][UP] = [(1.0, next_UP, reward, is_done(next_UP))]
-                P[s][RIGHT] = [(1.0, next_RIGHT, reward, is_done(next_RIGHT))]
-                P[s][DOWN] = [(1.0, next_DOWN, reward, is_done(next_DOWN))]
-                P[s][LEFT] = [(1.0, next_LEFT, reward, is_done(next_LEFT))]
+                v += (self.reward + self.discount_factor * self.value[next_pos[0], next_pos[1]]) * self.prob
 
-            # Update iterator
-            itr.iternext()
+        return v
 
-        # Initial state distribution is uniform
-        initial_state_distribution = np.ones(nS) / nS
+    def is_terminal(self, x, y):
+        return [x, y] in self.terminal
 
-        # We expose the model of the environment for educational purposes
-        # This should not be used in any model-free learning algorithm
-        self.P = P
+    def draw_value(self, filename='1.png'):
+        # print(self.value)
+        fig = plt.figure(figsize=(6, 6))
+        plt.subplots_adjust(wspace=0, hspace=0)
+        for x in range(self.n):
+            for y in range(self.m):
+                ax = fig.add_subplot(self.n, self.m, x * self.m + y + 1)
+                ax.axes.get_xaxis().set_ticks([])
+                ax.axes.get_yaxis().set_ticks([])
+                ax.text(0.5, 0.5, round(self.value[x][y], 2), horizontalalignment='center', verticalalignment='center')
+        plt.savefig(filename, dpi=1000)
+        plt.show()
 
-        # Save parameters
-        super(GridworldEnv, self).__init__(nS, nA, P, initial_state_distribution)
+    def draw_policy(self, filename='2.png'):
+        fig_pos = [(0.5, 1.0), (0.5, 0.0), (0.0, 0.5), (1.0, 0.5)]
+        fig = plt.figure(figsize=(6, 6))
+        plt.subplots_adjust(wspace=0, hspace=0)
+        for x in range(self.n):
+            for y in range(self.m):
+                ax = fig.add_subplot(self.n, self.m, x * self.m + y + 1)
+                ax.axes.get_xaxis().set_ticks([])
+                ax.axes.get_yaxis().set_ticks([])
 
-    # Overwrite render function
-    def _render(self, mode='human', close=False):
-        # Close
-        if close:
-            return
-        # sys.stdout: the input control port of python, print == sys.stdout.write()
-        # StringIO(): read/write str in memory
-        outfile = StringIO() if mode == 'ansi' else sys.stdout
+                ax.spines['bottom'].set_linewidth(2)
+                ax.spines['top'].set_linewidth(2)
+                ax.spines['left'].set_linewidth(2)
+                ax.spines['right'].set_linewidth(2)
 
-        # Initialize map
-        grid = np.arange(self.nS).reshape(self.shape)
-        # Iterator
-        itr = np.nditer(grid, flags=['multi_index'])
+                if self.is_terminal(x, y):
+                    ax.set_facecolor('grey')
+                else:
+                    pos = np.array([x, y]) + np.array(self.action[int(self.policy[x][y])])
+                    value = self.value[pos[0], pos[1]]
 
-        # Traverse all grids
-        while not itr.finished:
-            s = itr.iterindex
-            y, x = itr.multi_index
-            # terminal state
-            if self.s == s:
-                output = " x "
-            elif s == terminal_state_1 or s == terminal_state_2:
-                output = " T "
-            else:
-                # Normal grid
-                output = " o "
-
-            # If it is a new line
-            if x == 0:
-                # Remove the idle char on the left side of output
-                output = output.lstrip()
-            if x == self.shape[1] - 1:
-                # Remove the idle char on the right side of output
-                output = output.rstrip()
-
-            outfile.write(output)
-
-            if x == self.shape[1] - 1:
-                outfile.write("\n")
-
-            itr.iternext()
-
-
-
+                    for idx in range(len(self.action)):
+                        next_pos = np.array([x, y]) + np.array(self.action[idx])
+                        if next_pos[0] < 0 or next_pos[0] >= self.n or next_pos[1] < 0 or next_pos[1] >= self.m:
+                            continue
+                        elif abs(self.value[next_pos[0], next_pos[1]] - value) < 0.01:
+                            ax.annotate('', fig_pos[idx], xytext=(0.5, 0.5), xycoords='axes fraction',
+                                        arrowprops={'width': 1.5, 'headwidth': 10, 'color': 'black'})
+        plt.savefig(filename, dpi=1000)
+        plt.show()
