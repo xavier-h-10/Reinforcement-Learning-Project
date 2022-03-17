@@ -142,13 +142,13 @@ After that, we use the visualization methods in `GridWorld.py`. Here is the resu
 
 <img src="/Users/xtommy/Desktop/cs489_lab/lab1/docs/assets/policy_iter_2.png" alt="policy_iter_2" style="zoom:5%;" />
 
-Besides, **we can use **$4 \times 4 $ **matrix example as our reference**, in order to prove the correctness of iterative policy evaluation. The result is given below:
+Besides, **we can use **$4 \times 4 $ **matrix example as our reference**, in order to prove the correctness of policy iteration. The result is given below:
 
 <img src="/Users/xtommy/Desktop/cs489_lab/lab1/docs/assets/small_policy_iter_1.png" alt="small_policy_iter_1" style="zoom:5%;" />
 
 <img src="/Users/xtommy/Desktop/cs489_lab/lab1/docs/assets/small_policy_iter_2.png" alt="small_policy_iter_2" style="zoom:5%;" />
 
-**Both value matrix and optimal policy matrix are the same as those given in ppt.** Therefore, the correctness of iterative policy evaluation has been verifed.
+**Both value matrix and optimal policy matrix are the same as those given in ppt.** Therefore, the correctness of policy iteration has been verifed.
 
 
 
@@ -192,6 +192,8 @@ For policy iteration method, the total iteration number is **346** for policy ev
 For value iteration method, the total iteration number is **5**.
 
 We can see that the iteration number of value iteration is **much smaller** than that of policy iteration.  Both methods are guaranteed to converge; however, policy iteration is **more complex** and **requires more iterations to converge** in GridWorld.
+
+In practice, **value iteration performs much better than policy iteration, and finds the optimal state function in much fewer steps.**
 
 
 
