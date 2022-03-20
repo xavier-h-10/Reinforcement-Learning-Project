@@ -8,6 +8,7 @@ class GridWorld:
         self.n = shape[0]
         self.m = shape[1]
         self.value = np.zeros([self.n, self.m])
+        self.num = np.zeros([self.n, self.m])
         self.action = [[-1, 0], [1, 0], [0, -1], [0, 1]]
         self.terminal = terminal
         self.reward = -1
@@ -18,9 +19,33 @@ class GridWorld:
     def is_terminal(self, x, y):  # judge whether the given grid is terminal
         return [x, y] in self.terminal
 
-    def draw_value(self, filename='1.png'):  # draw value matrix
+    def in_bound(self, x, y):  # judge whether the position is in bound
+        return 0 <= x < self.n and 0 <= y < self.m
+
+    def get_policy(self):
+        n = self.n
+        m = self.m
+        for x in range(n):
+            for y in range(m):
+                if self.is_terminal(x, y):
+                    continue
+                else:
+                    tmp = -float('inf')
+                    tmp_idx = 0
+                    for idx in range(len(self.action)):
+                        next_pos = np.array([x, y]) + np.array(self.action[idx])
+                        if not self.in_bound(next_pos[0], next_pos[1]):
+                            continue
+                        elif self.value[next_pos[0], next_pos[1]] > tmp:
+                            tmp_idx = idx
+                            tmp = self.value[next_pos[0], next_pos[1]]
+                    self.policy[x][y] = tmp_idx
+
+    def draw_value(self, filename='1.png', title=None):  # draw value matrix
         # print(self.value)
         fig = plt.figure(figsize=(6, 6))
+        if title is not None:
+            plt.title(title)
         plt.subplots_adjust(wspace=0, hspace=0)
         for x in range(self.n):
             for y in range(self.m):
@@ -37,9 +62,11 @@ class GridWorld:
         plt.savefig(filename, dpi=1000)
         plt.show()
 
-    def draw_policy(self, filename='2.png'):  # draw policy/action matrix
+    def draw_policy(self, filename='2.png', title=None):  # draw policy/action matrix
         fig_pos = [(0.5, 1.0), (0.5, 0.0), (0.0, 0.5), (1.0, 0.5)]
         fig = plt.figure(figsize=(6, 6))
+        if title is not None:
+            plt.title(title)
         plt.subplots_adjust(wspace=0, hspace=0)
         for x in range(self.n):
             for y in range(self.m):
@@ -68,15 +95,24 @@ class GridWorld:
         plt.savefig(filename, dpi=1000)
         plt.show()
 
+    def clear(self):
+        self.value[:] = 0
+        self.num[:] = 0
+        self.policy[:] = 0
+
     def generate_episode(self):
-        mx = self.n * self.m - 1
         res = []
-        num = 0
-        while num < mx:
-            now = random.randint(0, mx)
-            now_x = now / self.m
-            now_y = now - self.m * now_x
-            res.append([now_x, now_y])
+        now_x = random.randint(0, self.n - 1)
+        now_y = random.randint(0, self.m - 1)
+        gain = 0
+        while True:
+            action = self.action[random.randint(0, 3)]
             if self.is_terminal(now_x, now_y):
+                gain += 1
                 break
-        return res
+            if self.in_bound(now_x + action[0], now_y + action[1]):
+                now_x += action[0]
+                now_y += action[1]
+            res.append((now_x, now_y))  # if not in bound, remain in the current position
+            gain -= 1
+        return res, gain
