@@ -106,13 +106,13 @@ class GridWorld:
         now_y = random.randint(0, self.m - 1)
         gain = 0
         while True:
+            res.append({'pos': (now_x, now_y), 'gain': gain})
             action = self.action[random.randint(0, 3)]
             if self.is_terminal(now_x, now_y):
                 gain += 1
                 break
-            if self.in_bound(now_x + action[0], now_y + action[1]):
+            if self.in_bound(now_x + action[0], now_y + action[1]):  # if not in bound, remain in the current position
                 now_x += action[0]
                 now_y += action[1]
-            res.append((now_x, now_y))  # if not in bound, remain in the current position
             gain -= 1
-        return res, gain
+        return res

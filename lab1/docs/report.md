@@ -29,7 +29,7 @@ All codes are placed in `./code` directory. To run the code, you can either run 
 
 ### GridWorld
 
-Firstly, I have implemented a class `GridWorld` in `GridWorld.py`, which provides some function that can be used in both methods and includes some basic parameters, such as `terminal`, `discount factor`, `reward`, etc.  Details can been seen in code annotation.
+Firstly, I have implemented a class `GridWorld` in `GridWorld.py`, which provides some function that can be used in both methods and includes some basic parameters, such as `terminal`, `discount factor`, `reward`, etc.  Details can be seen in code annotation.
 
 Besides, we use `matplotlib` library to visualize the results of action. I have adjusted some parameters to improve the visual effect. The code is given below:
 
