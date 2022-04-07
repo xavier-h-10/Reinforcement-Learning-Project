@@ -172,6 +172,8 @@ The hyperparameters we used in the Q-value update process are:
 
 #### $\mathbf{\epsilon=0}$
 
+For $\epsilon=0$, **both methods have chosen the optimal path.** Besides, both methods are converged quickly.
+
 <img src="../docs/assets/eps_0.png" alt="eps_0" style="zoom:9%;" />
 
 <img src="../docs/assets/policy/sarsa_0.png" alt="sarsa_0" style="zoom:5%;" />
@@ -179,6 +181,12 @@ The hyperparameters we used in the Q-value update process are:
 <img src="/Users/xtommy/Desktop/cs489_lab/lab3/docs/assets/policy/q_learning_0.png" alt="q_learning_0" style="zoom:5%;" />
 
 #### $\mathbf{\epsilon=0.1}$
+
+With respect to any $\epsilon-greedy$ policy with $\epsilon>0$ **not so small**, the cells just above the cliff are dangerous and should have small value function for Sarsa method. Therefore, for $\epsilon=0.1$, **Sarsa chooses a safer path, while Q-Learning chooses an optimal path.**
+
+Besides, we can find that **the average reward of Q-Learning method is smaller than Sarsa's**. Because Sarsa learns the safer path, it actually receives a higher average reward per episode than Q-Learning even though it does not walk the optimal path.
+
+We also drawn the heatmap of *Q* matrix for both methods. It is clear that for both methods, the average *Q* values of cells just beyond the cliff are much smaller, due to the danger.
 
 <img src="../docs/assets/eps_1.png" alt="eps_1" style="zoom:9%;" />
 
@@ -196,6 +204,8 @@ The hyperparameters we used in the Q-value update process are:
 
 #### $\mathbf{\epsilon=0.3}$
 
+For $\epsilon=0.3$, both methods behave like $\epsilon=0.1$. But rewards of both methods are much harder to converge. The reason is that when $\epsilon$ is larger, $\epsilon-greedy$ method is more likely to choose a random action, instead of the optimal action.
+
 <img src="/Users/xtommy/Desktop/cs489_lab/lab3/docs/assets/eps_2.png" alt="eps_2" style="zoom:9%;" />
 
 <img src="../docs/assets/policy/sarsa_2.png" alt="sarsa_2" style="zoom:5%;" />
@@ -208,4 +218,6 @@ The hyperparameters we used in the Q-value update process are:
 
 Q-Learning learns the optimal policy, which moves along the cliff, but random exploration leads to higher chance of falling off. Thus, Q-Learning is less stable and has higher penalties. 
 
-Meanwhile, SARSA finds a safer, but not the optimal path, in which the agent prefers to go further away from the cliff.
+Meanwhile, Sarsa is more conservative. It finds a safer, but not the optimal path, in which the agent prefers to go further away from the cliff.
+
+In practical application, we tend to use Q-Learning method rather than Sarsa method, in order to find the optimal path. Besides, $\epsilon$ should not be too large, otherwise it would be more difficult to converge.
