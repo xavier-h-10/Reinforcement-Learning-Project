@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import random
+import seaborn as sns
 
 
 class CliffWalking:
@@ -10,7 +10,7 @@ class CliffWalking:
         self.start = [self.n - 1, 0]
         self.terminal = [self.n - 1, self.m - 1]
         self.action = [[-1, 0], [1, 0], [0, -1], [0, 1]]
-        self.Q = np.random.randn(self.n, self.m, 4)
+        self.Q = np.zeros((self.n, self.m, 4))
         self.eps = eps
         self.usual_reward = -1
         self.cliff_reward = -100
@@ -90,23 +90,10 @@ class CliffWalking:
         plt.savefig(filename, dpi=1000)
         plt.show()
 
-    # def draw_value(self, filename='1.png', title=None):  # draw value matrix
-    #     # print(self.value)
-    #     fig = plt.figure(figsize=(6, 6))
-    #     if title is not None:
-    #         plt.title(title)
-    #     plt.subplots_adjust(wspace=0, hspace=0)
-    #     for x in range(self.n):
-    #         for y in range(self.m):
-    #             ax = fig.add_subplot(self.n, self.m, x * self.m + y + 1)
-    #             ax.axes.get_xaxis().set_ticks([])
-    #             ax.axes.get_yaxis().set_ticks([])
-    #
-    #             ax.spines['bottom'].set_linewidth(2)
-    #             ax.spines['top'].set_linewidth(2)
-    #             ax.spines['left'].set_linewidth(2)
-    #             ax.spines['right'].set_linewidth(2)
-    #             ax.text(0.5, 0.5, round(self.value[x][y], 2), horizontalalignment='center', verticalalignment='center',
-    #                     fontdict={'size': 14})
-    #     plt.savefig(filename, dpi=1000)
-    #     plt.show()
+    def draw_heatmap(self, title, filename='2.png'):
+        data = np.mean(self.Q, axis=2)
+        ax = sns.heatmap(data)
+        if title is not None:
+            ax.set_title(title)
+        plt.savefig(filename, dpi=1000)
+        plt.show()

@@ -1,7 +1,6 @@
 from CliffWalking import CliffWalking
 import numpy as np
 
-
 class Sarsa:
     def __init__(self, shape, alpha=0.1, gamma=0.9, eps=0.1, episode=1000):
         self.env = CliffWalking(shape, alpha, eps)
@@ -49,4 +48,7 @@ class Sarsa:
             state = next_state
             action = next_action
 
-        self.env.draw_path(policy, 'SARSA Policy', 'SARSA.png')
+        self.env.draw_path(policy, 'SARSA Policy $\epsilon=' + str(self.eps) + '$', 'SARSA.png')
+
+    def draw_heatmap(self):
+        self.env.draw_heatmap('SARSA $\epsilon=' + str(self.eps) + '$','SARSA heatmap.png')

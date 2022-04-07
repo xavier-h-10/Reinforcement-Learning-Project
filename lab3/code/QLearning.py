@@ -44,4 +44,7 @@ class QLearning:
             next_state, reward = self.env.move(state, action)
             state = next_state
 
-        self.env.draw_path(policy, 'Q-Learning Policy', 'Q-Learning.png')
+        self.env.draw_path(policy, 'Q-Learning Policy $\epsilon=' + str(self.eps) + '$', 'Q-Learning.png')
+
+    def draw_heatmap(self):
+        self.env.draw_heatmap('Q-Learning $\epsilon=' + str(self.eps) + '$','QLearning heatmap.png')
