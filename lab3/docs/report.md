@@ -30,6 +30,18 @@ All codes are placed in `./code` directory. To run the code, you can either run 
 
 ### Cliff Walking
 
+ $\epsilon-greedy$ policy is a simple way to balance exploration and exploitation by choosing exploration and exploitation randomly.  For $\epsilon-greedy$ policy,
+$$
+\pi(a|s)=\begin{cases} \frac{\epsilon}{m}+1-\epsilon，if\ a^*={argmax}_{a\in A}  \\ \frac{\epsilon}{m}，\ \ \ \ \ \ \ \ \ \ \ \ \   otherwise\end{cases}
+$$
+
+
+
+
+
+
+We use $\epsilon-greedy$ policy to choose action in both SARSA and Q-Learning method, and the implementation is mentioned below.
+
 
 
 
@@ -42,7 +54,16 @@ For SARSA method, the algorithm can be given as follows. It is important that wh
 
 
 
-### Q-learning Method
+### Q-Learning Method
 
 ![qlearning](./assets/qlearning.png)
 
+
+
+
+
+### Comparison
+
+Q-Learning learns the optimal policy, which moves along the cliff, but random exploration leads to higher chance of falling off. Thus, Q-Learning is less stable and has higher penalties. 
+
+Meanwhile, SARSA finds a safer, but not the optimal path, which is further from the cliff.
