@@ -1,25 +1,7 @@
-import gym
-from DQN import DQN
+# from Net import Net
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-
-# 超参数
-# batch_size = 32  # 样本数量
-# LR = 0.01  # 学习率
-# eps = 0.9  # greedy policy
-# gamma = 0.9  # reward discount
-# frequency = 20  # 目标网络更新频率
-# capacity = 2000  # 记忆库容量
-# env = gym.make('MountainCar-v0').unwrapped  # 使用gym库中的环境：CartPole，且打开封装(若想了解该环境，请自行百度)
-# action_num = env.action_space.n
-# state_num = env.observation_space.shape[0]
-#
-# print("env info: ", action_num, state_num)
-# print(action_num)
-# print(state_num)
-
-
 
 
 class Net(nn.Module):
@@ -105,41 +87,3 @@ class DQN(object):
         self.optimizer.zero_grad()  # 清空上一步的残余更新参数值
         loss.backward()  # 误差反向传播, 计算参数更新值
         self.optimizer.step()  # 更新评估网络的所有参数
-
-
-if __name__ == '__main__':
-    capacity = 2000
-    env = gym.make('MountainCar-v0').unwrapped
-    action_num = env.action_space.n
-    state_num = env.observation_space.shape[0]
-
-    dqn = DQN()  # 令dqn=DQN类
-
-    for i in range(400):  # 400个episode循环
-        print('<<<<<<<<<Episode: %s' % i)
-        s = env.reset()  # 重置环境
-        episode_reward_sum = 0  # 初始化该循环对应的episode的总奖励
-        num = 0
-        while num <= 500:  # 开始一个episode (每一个循环代表一步)
-            if i == 399:
-                env.render()
-
-            a = dqn.choose_action(s)  # 输入该步对应的状态s，选择动作
-            s_, r, done, info = env.step(a)  # 执行动作，获得反馈
-
-            pos, vel = s_
-            new_r = r
-
-            dqn.store_transition(s, a, new_r, s_)  # 存储样本
-            episode_reward_sum += new_r  # 逐步加上一个episode内每个step的reward
-
-            s = s_  # 更新状态
-
-            if dqn.memory_counter > capacity:
-                dqn.learn()
-                num += 1
-
-            if done:
-                print('episode%s---reward_sum: %s' % (i, round(episode_reward_sum, 2)))
-                print(num)
-                break  # 该episode结束
