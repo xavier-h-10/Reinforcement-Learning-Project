@@ -20,7 +20,7 @@ class Net(nn.Module):
         return self.model(x)
 
 
-class DQN:
+class DDQN:
     def __init__(self, action_num=3, state_num=2, memory_size=2048, lr=0.01, eps=0.9, update_iter=25, batch_size=32,
                  discount=0.9):
         self.eval_net, self.target_net = Net(), Net()
@@ -70,9 +70,15 @@ class DQN:
 
         q_eval = self.eval_net(state).gather(1, action)
         q_next = self.target_net(state_).detach()
+
+        # difference between DQN and DDQN
+        q_eval_ = self.eval_net(state).detach()
+        q_next = q_eval_.gather(1, torch.max(q_eval_, 1)[1].unsqueeze(1)).squeeze(1)
+        mx = q_next.reshape(self.batch_size, 1)
         # set y_j = r_j + gamma*max
-        q_target = reward + self.discount * q_next.max(1)[0].view(self.batch_size, 1)
+        q_target = reward + self.discount * mx
         loss = self.loss(q_eval, q_target)
+
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()

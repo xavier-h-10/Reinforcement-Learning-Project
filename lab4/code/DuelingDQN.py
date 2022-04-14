@@ -2,25 +2,30 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-
 class Net(nn.Module):
     def __init__(self, state_num=2, action_num=3):
         super(Net, self).__init__()
 
-        self.model = nn.Sequential(
+        self.features = nn.Sequential(
             nn.Linear(state_num, 16),
             nn.ReLU(),
             nn.Linear(16, 16),
             nn.ReLU(),
-            nn.Linear(16, action_num)
         )
 
+        self.advantage = nn.Linear(16, action_num)
+        self.value = nn.Linear(16, 1)
+
     def forward(self, x):
-        return self.model(x)
+        y = self.features(x)
+        advantage = self.advantage(y)
+        value = self.value(y)
+
+        return value + advantage - advantage.mean()
 
 
-class DQN:
-    def __init__(self, action_num=3, state_num=2, memory_size=2000, lr=0.01, eps=0.9, update_iter=20, batch_size=32,
+class DuelingDQN:
+    def __init__(self, action_num=3, state_num=2, memory_size=2048, lr=0.01, eps=0.9, update_iter=25, batch_size=32,
                  discount=0.9):
         self.eval_net, self.target_net = Net(), Net()
         self.num = 0
@@ -37,7 +42,7 @@ class DQN:
         self.batch_size = batch_size
         self.discount = discount
 
-    def choose_action(self, x):
+    def move(self, x):
         x = torch.unsqueeze(torch.FloatTensor(x), 0)
         # with probability 1-eps select a random action, otherwise a_t=argmax
         if np.random.uniform() < self.eps:
@@ -48,7 +53,7 @@ class DQN:
             action = np.random.randint(0, self.action_num)
         return action
 
-    def store_transition(self, s, a, r, s_):
+    def save_buffer(self, s, a, r, s_):
         transition = np.hstack((s, [a, r], s_))
         index = self.memory_counter % self.memory_size
         self.memory[index, :] = transition
@@ -69,7 +74,7 @@ class DQN:
 
         q_eval = self.eval_net(state).gather(1, action)
         q_next = self.target_net(state_).detach()
-        # set y_j=r_j+gamma*max
+        # set y_j = r_j + gamma*max
         q_target = reward + self.discount * q_next.max(1)[0].view(self.batch_size, 1)
         loss = self.loss(q_eval, q_target)
         self.optimizer.zero_grad()
