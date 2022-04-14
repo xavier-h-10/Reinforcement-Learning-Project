@@ -21,13 +21,13 @@ class Net(nn.Module):
 
 
 class DQN(object):
-    def __init__(self, action_num=3, state_num=2, learning_rate=0.01, gamma=0.9, eps=0.9, capacity=2000, batch_size=32,
+    def __init__(self, action_num=3, state_num=2, learning_rate=0.01, discount=0.9, eps=0.9, capacity=2000, batch_size=32,
                  frequency=20):
         self.action_num = action_num
         self.state_num = state_num
         self.learning_rate = learning_rate
         self.eps = eps
-        self.gamma = gamma
+        self.discount = discount
         self.capacity = capacity
         self.batch_size = batch_size
         self.frequency = frequency
@@ -64,8 +64,8 @@ class DQN(object):
         self.learn_step_counter += 1  # 学习步数自加1
 
         # 抽取记忆库中的批数据
-        sample_index = np.random.choice(self.capacity, self.batch_size)  # 在[0, 2000)内随机抽取32个数，可能会重复
-        b_memory = self.memory[sample_index, :]  # 抽取32个索引对应的32个transition，存入b_memory
+        idx = np.random.choice(self.capacity, self.batch_size)  # 在[0, 2000)内随机抽取32个数，可能会重复
+        b_memory = self.memory[idx, :]  # 抽取32个索引对应的32个transition，存入b_memory
         b_s = torch.FloatTensor(b_memory[:, :self.state_num])
         # 将32个s抽出，转为32-bit floating point形式，并存储到b_s中，b_s为32行4列
         b_a = torch.LongTensor(b_memory[:, self.state_num:self.state_num + 1].astype(int))
@@ -80,7 +80,7 @@ class DQN(object):
         # eval_net(b_s)通过评估网络输出32行每个b_s对应的一系列动作值，然后.gather(1, b_a)代表对每行对应索引b_a的Q值提取进行聚合
         q_next = self.target_net(b_s_).detach()
         # q_next不进行反向传递误差，所以detach；q_next表示通过目标网络输出32行每个b_s_对应的一系列动作值
-        q_target = b_r + self.gamma * q_next.max(1)[0].view(self.batch_size, 1)
+        q_target = b_r + self.discount * q_next.max(1)[0].view(self.batch_size, 1)
         # q_next.max(1)[0]表示只返回每一行的最大值，不返回索引(长度为32的一维张量)；.view()表示把前面所得到的一维张量变成(batch_size, 1)的形状；最终通过公式得到目标值
         loss = self.loss_func(q_eval, q_target)
         # 输入32个评估值和32个目标值，使用均方损失函数
