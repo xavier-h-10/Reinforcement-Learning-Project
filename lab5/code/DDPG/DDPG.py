@@ -11,14 +11,16 @@ from noise import OUActionNoise
 #####################  hyper parameters  ####################
 EPISODES = 200
 EP_STEPS = 200
-LR_ACTOR = 0.001
+lr_actor = 0.001
 LR_CRITIC = 0.002
-GAMMA = 0.9
+gamma = 0.9
 TAU = 0.01
 MEMORY_CAPACITY = 10000
 BATCH_SIZE = 32
 RENDER = True
 ENV_NAME = 'Pendulum-v1'
+
+device = T.device('cuda:0' if T.cuda.is_available() else 'cuda:1')
 
 
 class DDPG(object):
@@ -47,8 +49,9 @@ class DDPG(object):
         # put the actor into the evaluation mode
         # 前面使用了batch normalization, 这里要使用eval()
         self.actor.eval()
-        mu = self.actor.forward(s)
-        mu_prime = mu + T.tensor(self.noise(), dtype=T.float)
+        s = T.tensor(s, dtype=T.float).to(device)
+        mu = self.actor.forward(s).to(device)
+        mu_prime = mu + T.tensor(self.noise(), dtype=T.float).to(device)
         self.actor.train()
 
         return mu_prime
@@ -63,11 +66,11 @@ class DDPG(object):
         # sample a random minibatch of N transitions from R
         states, actions, rewards, states_, done = self.memory.sample_buffer(self.batch_size)
 
-        states = T.tensor(states, dtype=T.float)
-        states_ = T.tensor(states_, dtype=T.float)
-        actions = T.tensor(actions, dtype=T.float)
-        rewards = T.tensor(rewards, dtype=T.float)
-        done = T.tensor(done)
+        states = T.tensor(states, dtype=T.float).to(device)
+        states_ = T.tensor(states_, dtype=T.float).to(device)
+        actions = T.tensor(actions, dtype=T.float).to(device)
+        rewards = T.tensor(rewards, dtype=T.float).to(device)
+        done = T.tensor(done).to(device)
 
         target_actions = self.target_actor.forward(states_)
         critic_value_ = self.target_critic.forward(states_, target_actions)
@@ -76,8 +79,8 @@ class DDPG(object):
         # yi = ri + gamma * Q'
         target = []
         for j in range(self.batch_size):
-            target.append(rewards[j]+self.gamma*critic_value_[j]*done[j])
-        target = T.tensor(target)
+            target.append(rewards[j] + self.gamma * critic_value_[j] * done[j])
+        target = T.tensor(target).to(device)
         target = target.view(self.batch_size, 1)
 
         # update critic by minimizing the loss

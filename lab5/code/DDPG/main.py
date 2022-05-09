@@ -1,9 +1,10 @@
 import gym
 import numpy as np
 import torch
+import sys
 
-from A5.A3C.utils import v_wrap
-from DDPG import DDPG
+from utils import *
+from DDPG import agent
 
 # define hyper parameters (from paper)
 episodes = 1000
@@ -18,6 +19,7 @@ env_id = 'Pendulum-v1'
 
 if __name__ == '__main__':
     env = gym.make(env_id)
+    print("checkpoint 1")
     agent = DDPG(alpha, beta, input_dims, tau, n_actions, gamma)
 
     score_history = []
@@ -28,7 +30,7 @@ if __name__ == '__main__':
         agent.noise.reset()
         while not done:
             # 乱七八糟改了一番，不报错了，但可能有问题。。。
-            action = agent.choose_action(v_wrap(s, np.float32)).detach().numpy()
+            action = agent.choose_action(v_wrap(s, np.float32)).cpu().detach().numpy()
             s_, reward, done, _ = env.step(action)
             agent.remember(s, action, reward, s_, done)
             agent.learn()

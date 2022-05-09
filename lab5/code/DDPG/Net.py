@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+device = T.device('cuda:0' if T.cuda.is_available() else 'cuda:1')
 
 # two hidden layers: 400, 300
 # weights, biases -- uniform distribution [-3e-3, 3e-3]
@@ -46,7 +47,7 @@ class CriticNet(nn.Module):
 
         self.optimizer = optim.Adam(self.parameters(), lr=beta,
                                     weight_decay=0.01)
-
+        self.to(device)
 
     def forward(self, state, action):
         # first layer
@@ -96,6 +97,7 @@ class ActorNet(nn.Module):
         self.mu.bias.data.uniform_(-f3, f3)
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
+        self.to(device)
 
     def forward(self, state):
         x = self.fc1(state)
