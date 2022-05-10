@@ -1,19 +1,19 @@
-"""
-Functions that use multiple times
-"""
-
-from torch import nn
+from gym.wrappers import Monitor
 import torch
-import numpy as np
 
+# be aware that gym<=0.12.0, gym has removed monitor wrapper in higher version
 
-def v_wrap(np_array, dtype=np.float32):
-    if np_array.dtype != dtype:
-        np_array = np_array.astype(dtype)
-    return torch.from_numpy(np_array)
+def export_video(env, agent, max_episode=1000):
+    assert env, agent is not None
+    env = Monitor(env, './result', force=True)
+    agent.actor.load_state_dict(torch.load('ddpg_actor.pth'))
+    agent.critic.load_state_dict(torch.load('ddpg_critic.pth'))
 
-
-def set_init(layers):
-    for layer in layers:
-        nn.init.normal_(layer.weight, mean=0., std=0.1)
-        nn.init.constant_(layer.bias, 0.)
+    state = env.reset()
+    for t in range(max_episode):
+        action = agent.choose_action(state, use_noise=False)
+        env.render()
+        state, reward, done, _ = env.step(action)
+        if done:
+            break
+    env.close()

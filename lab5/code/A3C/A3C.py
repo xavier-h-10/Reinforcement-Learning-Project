@@ -8,9 +8,6 @@ import torch.multiprocessing as mp
 from utils import v_wrap, set_init
 from Adam import SharedAdam
 import gym
-import pygame
-import matplotlib.pyplot as plt
-
 
 # set hyper parameters
 lr = 1e-4

@@ -1,23 +1,25 @@
+import random
 import numpy as np
+import copy
 
 
 # use Ornstein-Uhlenbeck process
-# theta = 0.15, sigma = 0.2
-class OUActionNoise():
-    def __init__(self, mu, sigma=0.15, theta=0.2, dt=1e-2, x0=None):
+class OUNoise:
+
+    def __init__(self, size, seed=2022, mu=0., theta=0.15, sigma=0.2):
+        self.mu = mu * np.ones(size)
         self.theta = theta
-        self.mu = mu
         self.sigma = sigma
-        self.dt = dt
-        self.x0 = x0
+        self.seed = random.seed(seed)
         self.reset()
 
-    def __call__(self):
-        x = self.x_prev + self.theta * (self.mu - self.x_prev) * self.dt + \
-                self.sigma * np.sqrt(self.dt) * np.random.normal(size=self.mu.shape)
-        self.x_prev = x
-
-        return x
-
     def reset(self):
-        self.x_prev = self.x0 if self.x0 is not None else np.zeros_like(self.mu)
+        # reset the internal state to mean (mu)
+        self.state = copy.copy(self.mu)
+
+    def sample(self):
+        # update internal state and return it as a noise sample
+        x = self.state
+        dx = self.theta * (self.mu - x) + self.sigma * np.array([random.random() for i in range(len(x))])
+        self.state = x + dx
+        return self.state

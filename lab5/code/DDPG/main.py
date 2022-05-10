@@ -1,41 +1,45 @@
-import gym
 import numpy as np
+from collections import deque
+import matplotlib.pyplot as plt
+import gym
+import random
 import torch
-import sys
 
-from utils import *
-from DDPG import agent
+from agent import Agent
+from utils import export_video
 
-# define hyper parameters (from paper)
-episodes = 1000
-EP_STEPS = 200
-alpha = 1e-4
-beta = 1e-3
-gamma = 0.99
-tau = 0.001
-input_dims = 3
-n_actions = 1
-env_id = 'Pendulum-v1'
+
+def train(max_episode=1000, max_step=300, use_noise=True):
+    scores = []
+    best_score = -10000.0
+    for i in range(max_episode):
+        state = env.reset()
+        agent.reset()
+        score = 0
+        for t in range(max_step):
+            action = agent.choose_action(state, use_noise=use_noise)
+            next_state, reward, done, _ = env.step(action)
+            agent.step(state, action, reward, next_state, done)
+            state = next_state
+            score += reward
+            if done:
+                break
+        scores.append(score)
+
+        print('Episode {} Score: {:.2f} Average Score: {:.2f}'.format(i + 1, score, np.mean(scores)))
+
+        if score < best_score:
+            best_score = score
+            torch.save(agent.actor.state_dict(), 'ddpg_actor.pth')
+            torch.save(agent.critic.state_dict(), 'ddpg_critic.pth')
+
+    return scores
+
 
 if __name__ == '__main__':
-    env = gym.make(env_id)
-    print("checkpoint 1")
-    agent = DDPG(alpha, beta, input_dims, tau, n_actions, gamma)
-
-    score_history = []
-    for i in range(episodes):
-        s = env.reset()
-        done = False
-        score = 0
-        agent.noise.reset()
-        while not done:
-            # 乱七八糟改了一番，不报错了，但可能有问题。。。
-            action = agent.choose_action(v_wrap(s, np.float32)).cpu().detach().numpy()
-            s_, reward, done, _ = env.step(action)
-            agent.remember(s, action, reward, s_, done)
-            agent.learn()
-            score += reward
-            s = s_
-        score_history.append(score)
-        print('episode ', i, 'score %.2f' % score,
-              '100 games average score %.1f' % np.mean(score_history[-100:]))
+    env = gym.make('Pendulum-v1')
+    env.seed(2022)
+    agent = Agent(state_num=3, action_num=1, seed=2022)
+    scores = train(max_episode=1000, use_noise=True)
+    np.save("ddpg.npy", np.array(scores))
+    export_video(env=env, agent=agent, max_episode=1000)
