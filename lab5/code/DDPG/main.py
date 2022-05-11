@@ -40,6 +40,6 @@ if __name__ == '__main__':
     env = gym.make('Pendulum-v1')
     env.seed(2022)
     agent = Agent(state_num=3, action_num=1, seed=2022)
-    scores = train(max_episode=1000, use_noise=True)
-    np.save("ddpg.npy", np.array(scores))
+    scores = train(max_episode=1000, use_noise=False)
+    np.save("ddpg_no_noise.npy", np.array(scores))
     export_video(env=env, agent=agent, max_episode=1000)

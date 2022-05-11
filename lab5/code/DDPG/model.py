@@ -24,15 +24,18 @@ class ActorNet(nn.Module):
         self.layer3.weight.data.uniform_(-3e-3, 3e-3)
 
     def forward(self, state):
-        model = nn.Sequential(
-            self.layer1,
-            nn.ReLU(),
-            self.layer2,
-            nn.ReLU(),
-            self.layer3,
-            torch.tanh()
-        )
-        return model
+        # model = nn.Sequential(
+        #     self.layer1,
+        #     nn.ReLU(),
+        #     self.layer2,
+        #     nn.ReLU(),
+        #     self.layer3,
+        #     nn.Tanh()
+        # )
+        # return model
+        x = F.relu(self.layer1(state))
+        x = F.relu(self.layer2(x))
+        return torch.tanh(self.layer3(x))
 
 
 class CriticNet(nn.Module):
