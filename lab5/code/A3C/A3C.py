@@ -8,6 +8,8 @@ import torch.multiprocessing as mp
 from utils import v_wrap, set_init
 from Adam import SharedAdam
 import gym
+import pygame
+import matplotlib.pyplot as plt
 
 # set hyper parameters
 lr = 1e-4
@@ -18,14 +20,11 @@ env_id = 'Pendulum-v1'
 n_actions = 1
 input_dims = 3
 # total number of games
-N_GAMES = 3000
+N_GAMES = 5000
 # in one episode, the max step is 200
 MAX_EP_STEP = 200
 # when reaches T_MAX, update the global network
 T_MAX = 5
-
-
-"""the most important optimize is to set gamma as 0.9 other than 0.99!!!!!!"""
 
 
 class ACNet(nn.Module):
@@ -52,7 +51,7 @@ class ACNet(nn.Module):
     def remember(self, state, action, reward):
         self.states.append(state)
         self.actions.append(action)
-        # normalize, 挺重要的
+        # normalize rewards
         self.rewards.append((reward + 8.1) / 8.1)
 
     def clear_memory(self):
@@ -91,7 +90,6 @@ class ACNet(nn.Module):
         return batch_return
 
     def calc_loss(self, done, s, a, s_):
-        # ?
         self.train()
         returns = self.calc_reward(done, s_)
 
@@ -103,7 +101,7 @@ class ACNet(nn.Module):
         log_probs = dist.log_prob(a)
         # entropy may affect the result a little
         # actor_loss = -log_probs * (returns - v)
-        # 加上entropy可以收敛地更快
+        # obtain a faster convergence
         entropy = 0.5 * 0.5 * math.log(2 * math.pi) + torch.log(dist.scale)
         actor_loss = -(log_probs * (returns - v).detach() + 0.005 * entropy)
 
@@ -115,7 +113,7 @@ class ACNet(nn.Module):
         # p, sigma, _ = self.forward(state)
         self.training = False
         p, sigma, _ = self.forward(s)
-        # ?
+
         action = self.distribution(p.view(1, ).data, sigma.view(1, ).data)
         action = action.sample().numpy()
         return action
@@ -131,7 +129,7 @@ class Agent(mp.Process):
         self.episode_idx = global_ep_idx
         self.global_ep_r = global_ep_r
         self.res_queue = res_queue
-        # 得到原始的类，解除Epoch限制
+        # get original class, lift Epoch restriction
         self.env = gym.make(env_id).unwrapped
         self.optimizer = optimizer
 
@@ -156,8 +154,7 @@ class Agent(mp.Process):
 
                 # update the global net and assign it to the local net
                 if t_step % T_MAX == 0 or done:
-                    # vwrap 将数组转换成张量
-                    # 为啥要np.vstack和np.array没搞明白
+                    # vwrap converts array to tensor
                     loss = self.local_actor_critic.calc_loss(done, v_wrap(np.vstack(self.local_actor_critic.states)),
                                                              v_wrap(np.array(self.local_actor_critic.actions)), s_)
                     self.optimizer.zero_grad()
@@ -180,7 +177,7 @@ class Agent(mp.Process):
                             if self.global_ep_r.value == 0.:
                                 self.global_ep_r.value = score
                             else:
-                                # makes reward stable
+                                # makes reward stable and much easier to observe the convergence trend
                                 self.global_ep_r.value = self.global_ep_r.value * 0.99 + score * 0.01
                         self.res_queue.put(self.global_ep_r.value)
                         print(self.name, 'episode ', self.episode_idx.value, 'reward %.1f' % self.global_ep_r.value)
@@ -205,16 +202,17 @@ if __name__ == '__main__':
                      env_id=env_id)
                for i in range(mp.cpu_count())]
     [w.start() for w in workers]
-    # res = []  # record episode reward to plot
-    # while True:
-        # r = res_queue.get()
-        # if r is not None:
-        #     res.append(r)
-        # else:
-        #     break
+    res = []  # record episode reward to plot
+    while True:
+        r = res_queue.get()
+        if r is not None:
+            res.append(r)
+        else:
+            break
     [w.join() for w in workers]
+    np.save('data.npy', res)
 
-    # plt.plot(res)
-    # plt.ylabel('Moving average ep reward')
-    # plt.xlabel('Step')
-    # plt.show()
+    plt.plot(res)
+    plt.ylabel('Moving average ep reward')
+    plt.xlabel('Step')
+    plt.show()
